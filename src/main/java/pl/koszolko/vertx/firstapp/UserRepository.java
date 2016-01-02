@@ -1,43 +1,42 @@
 package pl.koszolko.vertx.firstapp;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toConcurrentMap;
 
 public class UserRepository {
 
-    private static final List<User> USERS = new ArrayList<>();
+    private static final Map<Long,User> USERS = new ConcurrentHashMap<>();
 
     public UserRepository() {
         addSomeData();
     }
 
     private void addSomeData() {
-        USERS.addAll(
+        USERS.putAll(
                 Stream
                         .of("login69", "extra_user", "some_sample_login")
                         .map(User::new)
-                        .collect(toSet())
+                        .collect(toConcurrentMap(User::getId, Function.<User>identity()))
         );
     }
 
     public Optional<User> get(long id) {
-        return USERS
-                .stream()
-                .filter(user -> user.getId() == id)
-                .findFirst();
+        return Optional.ofNullable(USERS.get(id));
     }
 
-    public boolean add(User newUser) {
-        return USERS.add(newUser);
+    public void add(User newUser) {
+        USERS.put(newUser.getId(), newUser);
     }
 
-    public boolean remove(long id) {
-        return USERS.removeIf(user -> user.getId() == id);
+    public void remove(long id) {
+        USERS.remove(id);
     }
 
-    public List<User> getAll() {
-        return Collections.unmodifiableList(USERS);
+    public Collection<User> getAll() {
+        return Collections.unmodifiableCollection(USERS.values());
     }
 }
