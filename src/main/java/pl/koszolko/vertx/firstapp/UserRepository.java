@@ -32,8 +32,8 @@ public class UserRepository {
         USERS.put(newUser.getId(), newUser);
     }
 
-    public void remove(long id) {
-        USERS.remove(id);
+    public boolean remove(long id) {
+        return USERS.remove(id)!=null;
     }
 
     public Collection<User> getAll() {

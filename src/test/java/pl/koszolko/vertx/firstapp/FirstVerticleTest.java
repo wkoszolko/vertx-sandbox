@@ -12,6 +12,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+/**
+ * Simple tests using vertx-unit
+ */
 @RunWith(VertxUnitRunner.class)
 public class FirstVerticleTest {
 
@@ -50,7 +53,7 @@ public class FirstVerticleTest {
     }
 
     @Test
-    public void shouldReturn201CodeAndJsonWhenSendPost(TestContext context) {
+    public void shouldReturn201CodeAndNewUserWhenSendPost(TestContext context) {
         //given
         Async async = context.async();
         final String json = Json.encodePrettily(new User("master99"));

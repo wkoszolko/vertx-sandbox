@@ -3,13 +3,21 @@ package pl.koszolko.vertx.firstapp;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
+/**
+ * Integration tests using rest-assured.
+ * To run integration tests: mvn clean verify
+ */
+@RunWith(JUnitParamsRunner.class)
 public class UserApiIT {
 
     @BeforeClass
@@ -29,9 +37,9 @@ public class UserApiIT {
 
         given().
                 header("Accept-Encoding", "application/json").
-        when().
+                when().
                 get("api/users/" + id).
-        then().
+                then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
@@ -39,12 +47,27 @@ public class UserApiIT {
     }
 
     @Test
-    public void shouldReturnAllUsersForGetWithProperId() {
+    @Parameters({
+            "2145, 404",
+            "wrong_type_of_param, 400"
+    })
+    public void shouldReturnProperStatusCodeForGetWithWrongParam(String param, int statusCode) {
         given().
                 header("Accept-Encoding", "application/json").
-        when().
+                when().
+                get("api/users/" + param).
+                then().
+                assertThat().
+                statusCode(statusCode);
+    }
+
+    @Test
+    public void shouldReturnAllUsersForGet() {
+        given().
+                header("Accept-Encoding", "application/json").
+                when().
                 get("api/users/").
-        then().
+                then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
@@ -58,9 +81,9 @@ public class UserApiIT {
         given().
                 header("Accept-Encoding", "application/json").
                 body("{\"id\": 4, \"login\": \"new_super_user\"}").
-        when().
+                when().
                 post("/api/users/").
-        then().
+                then().
                 assertThat().
                 statusCode(201).
                 contentType(ContentType.JSON).
@@ -72,11 +95,26 @@ public class UserApiIT {
     public void shouldRemoveUserForDeleteWithProperId() {
         given().
                 header("Accept-Encoding", "application/json").
-        when().
+                when().
                 delete("/api/users/1").
-        then().
+                then().
                 assertThat().
                 statusCode(204);
+    }
+
+    @Test
+    @Parameters({
+            "50120, 404",
+            "wrong_type_of_param, 400"
+    })
+    public void shouldReturnProperStatusCodeForDeleteWithWrongParam(String id, int statusCode) {
+        given().
+                header("Accept-Encoding", "application/json").
+                when().
+                delete("api/users/" + id).
+                then().
+                assertThat().
+                statusCode(statusCode);
     }
 
     @Test
@@ -87,9 +125,9 @@ public class UserApiIT {
         given().
                 header("Accept-Encoding", "application/json").
                 body("{\"id\": " + id + ", \"login\": \"" + expectedLogin + "\"}").
-        when().
+                when().
                 put("/api/users/" + id).
-        then().
+                then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
