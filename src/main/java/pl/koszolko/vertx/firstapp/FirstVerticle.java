@@ -2,6 +2,7 @@ package pl.koszolko.vertx.firstapp;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -40,13 +41,19 @@ public class FirstVerticle extends AbstractVerticle {
                         .end("First Vert.x App"));
 
         router.get("/api/users").handler(this::getAll);
-        router.route("/api/users*").handler(BodyHandler.create());
+        router.route("/api/users*").handler(BodyHandler.create()).failureHandler(this::handleParsingError);
         router.post("/api/users").handler(this::add);
         router.put("/api/users/:id").handler(this::update);
         router.delete("/api/users/:id").handler(this::delete);
         router.get("/api/users/:id").handler(this::getOne);
 
         return router;
+    }
+
+    private void handleParsingError(RoutingContext routingContext) {
+        if (routingContext.failure() instanceof DecodeException) {
+            routingContext.response().setStatusCode(400).end();
+        }
     }
 
     private void getOne(RoutingContext routingContext) {
@@ -82,7 +89,7 @@ public class FirstVerticle extends AbstractVerticle {
     private void update(RoutingContext routingContext) {
         String id = routingContext.request().getParam("id");
         JsonObject json = routingContext.getBodyAsJson();
-        if (!StringUtils.isNumeric(id) || json == null) {
+        if (!StringUtils.isNumeric(id) || json == null || json.getString("login")==null) {
             routingContext.response().setStatusCode(400).end();
         } else {
             Optional<User> userOptional = USER_REPOSITORY.get(Long.valueOf(id));
@@ -92,6 +99,8 @@ public class FirstVerticle extends AbstractVerticle {
                 routingContext.response()
                         .putHeader("content-type", "application/json; charset=utf-8")
                         .end(Json.encodePrettily(user));
+            } else {
+                routingContext.response().setStatusCode(404).end();
             }
         }
     }

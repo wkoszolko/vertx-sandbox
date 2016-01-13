@@ -37,9 +37,9 @@ public class UserApiIT {
 
         given().
                 header("Accept-Encoding", "application/json").
-                when().
+        when().
                 get("api/users/" + id).
-                then().
+        then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
@@ -54,9 +54,9 @@ public class UserApiIT {
     public void shouldReturnProperStatusCodeForGetWithWrongParam(String param, int statusCode) {
         given().
                 header("Accept-Encoding", "application/json").
-                when().
+        when().
                 get("api/users/" + param).
-                then().
+        then().
                 assertThat().
                 statusCode(statusCode);
     }
@@ -65,9 +65,9 @@ public class UserApiIT {
     public void shouldReturnAllUsersForGet() {
         given().
                 header("Accept-Encoding", "application/json").
-                when().
+        when().
                 get("api/users/").
-                then().
+        then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
@@ -81,9 +81,9 @@ public class UserApiIT {
         given().
                 header("Accept-Encoding", "application/json").
                 body("{\"id\": 4, \"login\": \"new_super_user\"}").
-                when().
+        when().
                 post("/api/users/").
-                then().
+        then().
                 assertThat().
                 statusCode(201).
                 contentType(ContentType.JSON).
@@ -92,12 +92,33 @@ public class UserApiIT {
     }
 
     @Test
+    @Parameters(method = "paramsForGet")
+    public void shouldReturnCorrectStatusCodeForGetWithIncorrectJson(String json, int statusCode) {
+        given().
+                header("Accept-Encoding", "application/json").
+                body(json).
+        when().
+                post("/api/users/").
+        then().
+                assertThat().
+                statusCode(statusCode);
+    }
+
+    private Object paramsForGet() {
+        return new Object[]{
+                new String[]{"this_is_not_json", "400"},
+                new String[]{"{\"id\": \"1\", \"xxx\": \"wrong_json_schema\"}","400"}
+        };
+    }
+
+
+    @Test
     public void shouldRemoveUserForDeleteWithProperId() {
         given().
                 header("Accept-Encoding", "application/json").
-                when().
+        when().
                 delete("/api/users/1").
-                then().
+        then().
                 assertThat().
                 statusCode(204);
     }
@@ -110,9 +131,9 @@ public class UserApiIT {
     public void shouldReturnProperStatusCodeForDeleteWithWrongParam(String id, int statusCode) {
         given().
                 header("Accept-Encoding", "application/json").
-                when().
+        when().
                 delete("api/users/" + id).
-                then().
+        then().
                 assertThat().
                 statusCode(statusCode);
     }
@@ -125,13 +146,34 @@ public class UserApiIT {
         given().
                 header("Accept-Encoding", "application/json").
                 body("{\"id\": " + id + ", \"login\": \"" + expectedLogin + "\"}").
-                when().
+        when().
                 put("/api/users/" + id).
-                then().
+        then().
                 assertThat().
                 statusCode(200).
                 contentType(ContentType.JSON).
                 body("login", equalTo(expectedLogin));
+    }
+
+    @Test
+    @Parameters(method = "paramsForPut")
+    public void shouldReturnProperStatusCodeForPutWithWrongParam(String json, int id, int statusCode) {
+        given().
+                header("Accept-Encoding", "application/json").
+                body(json).
+        when().
+                put("/api/users/" + id).
+        then().
+                assertThat().
+                statusCode(statusCode);
+    }
+
+    private Object paramsForPut() {
+        return new Object[]{
+                new String[]{"{\"id\": \"600\", \"login\": \"user_dont_exist\"}", "600", "404"},
+                new String[]{"this_is_not_json", "0", "400"},
+                new String[]{"{\"id\": \"1\", \"xxx\": \"wrong_json_schema\"}", "1", "400"}
+        };
     }
 
     private String getLoginById(long id) {
